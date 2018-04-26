@@ -9,6 +9,7 @@ OPinfoCon ={'Page':'Page','TESTDATA':'TESTDATA',}
 OPinfo.append(OPinfoCon)
 
 
+
 pdfReader =PyPDF2.PdfFileReader(pdfFileObj)
 #print(pdfReader.numPages)
 
