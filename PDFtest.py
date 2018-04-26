@@ -26,11 +26,25 @@ if matchObj:
 else:
     print('Date no match')
 
-#TO DO Search Medium parameters:
-matchObj = re.search(r'f = (.*?);.*?=(.*?).*?=', pageCont, re.M|re.I)
+#TO DO Search File name
+matchObj = re.search(r'Lab\n(.*?)DUT: ', pageCont, re.M|re.I)
 if matchObj:
-    print('Medium usede f =:', matchObj.group(1))
-    print('Medium conductivy:', matchObj.group(2))
+    print('File name:', matchObj.group(1))
+else:
+    print('File name no match')
+
+#TO DO Search Medium fre:
+matchObj = re.search(r'f = (.*?) MHz;', pageCont, re.M|re.I)
+if matchObj:
+    print('Medium usede f =:', matchObj.group(1)+' MHz')
+else:
+    print('Medium fre no match')
+
+#TO DO Search Medium parameters:
+matchObj = re.search(r' (.*?) S/m;.*?= (.*?);', pageCont, re.M|re.I)
+if matchObj:
+    print('Medium conductivy f =:', matchObj.group(1)+' S/m')
+    print('Medium permittiy:', matchObj.group(2))
     # print('Medium permittiy:', matchObj.group(3))
 else:
     print('Medium parameters no match')
