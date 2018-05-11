@@ -25,14 +25,14 @@ pdfReader =PyPDF2.PdfFileReader(pdfFileObj)
 #print(pdfReader.numPages)
 
 
-
-
-
 # print(pageCont + '\n')
 
 def TiQuInfo():
     pageObj = pdfReader.getPage(Page)
     pageCont = pageObj.extractText()
+
+    if Page ==2:
+        print(pageCont)
 
     #TO DO Search Date
     matchObj = re.search(r'Date:.*? ([0-9].*[0-9])\S', pageCont, re.M|re.I)
@@ -65,7 +65,7 @@ def TiQuInfo():
 
 
     #TO DO Search Medium parameters:
-    matchObj = re.search(r' (\d.*?) S/m;.*?= (.*?);', pageCont, re.M|re.I)
+    matchObj = re.search(r'= (\d.\d*?) S/m;.*?= (.*?);', pageCont, re.M|re.I)
     if matchObj:
         print('Medium conductivy f =', matchObj.group(1)+' S/m')
         print('Medium permittiy:', matchObj.group(2))
@@ -79,7 +79,7 @@ def TiQuInfo():
 
 
     #TO DO Search Frequency:
-    matchObj = re.search(r'Frequency: (.*?);Duty Cycle: ([0-9].*?)M', pageCont, re.M|re.I)
+    matchObj = re.search(r'Frequency: (.*?);Duty Cycle: ([0-9].*?)M', pageCont, re.M|re.S|re.I)
     if matchObj:
         print('Frequency:', matchObj.group(1))
         print('Duty Cycle:', matchObj.group(2))
@@ -87,8 +87,8 @@ def TiQuInfo():
         PageCon['Duty Cycle'] = matchObj.group(2)
     else:
         print('Frequency Duty Cycle no match')
-        PageCon['Frequency'] = 'Frequency Duty Cycle no match'
-        PageCon['Duty Cycle'] = 'Frequency Duty Cycle no match'
+        PageCon['Frequency'] = 'Frequency & Duty Cycle no match'
+        PageCon['Duty Cycle'] = 'Frequency & Duty Cycle no match'
 
 
     #TO DO Search Probe
