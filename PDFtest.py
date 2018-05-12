@@ -3,16 +3,18 @@ import re
 import openpyxl
 from openpyxl.workbook import Workbook
 from openpyxl.writer.excel import ExcelWriter
-
-
 from openpyxl.cell import Cell
 
 EquipmentList=[]
 EquipmentListCon ={'Manufacturer':'SPEAG', 'Device':'Device','Type':'Type','SN':'Serial number','DateOfCal':'Date of last calibration','Vaild period':'Valid period'}
-
+EquipmentList.append(list(EquipmentListCon))
+EquipmentListConDAE =[]
+EquipmentListConPROBE =[]
+EquipmentListConPHANTOM =[]
 
 PageConList=[]
-PageCon ={'TEST data':'TEST data', 'File name':'File name', 'Medium used f':'Medium used f','Medium conductivy':'Medium conductivy','Medium permittiy':'Medium permittiy',\
+PageCon ={'TEST data':'TEST data', 'File name':'File name','DUT':'DUT','Type':'Type', 'Serial':'Serial',\
+          'Medium used f':'Medium used f','Medium conductivy':'Medium conductivy','Medium permittiy':'Medium permittiy',\
           'Frequency':'Frequency','Duty Cycle':'Duty Cycle','Probe type':'Probe type','Probe SN':'Probe SN','Probe Calibrate DATE':'Probe Calibrate DATE',\
           'Sensor-Surface':'Sensor-Surface','DAE SN':'DAE SN','DAE Calibrate DATE':'DAE Calibrate DATE',\
            'Phantom':'Phantom','Phantom Type':'Phantom Type','Phantom Serial':'Phantom Serial',\
@@ -27,12 +29,12 @@ pdfReader =PyPDF2.PdfFileReader(pdfFileObj)
 
 # print(pageCont + '\n')
 
-def TiQuInfo():
+def TiQuInfo(Page):
     pageObj = pdfReader.getPage(Page)
     pageCont = pageObj.extractText()
 
-    if Page ==2:
-        print(pageCont)
+    # if Page == 4:
+    #     print(pageCont)
 
     #TO DO Search Date
     matchObj = re.search(r'Date:.*? ([0-9].*[0-9])\S', pageCont, re.M|re.I)
@@ -45,7 +47,7 @@ def TiQuInfo():
 
 
     #TO DO Search File name
-    matchObj = re.search(r'Lab\n(.*?)DUT: ', pageCont, re.M|re.I)
+    matchObj = re.search(r' Lab\n(.*?)DUT: ', pageCont, re.M|re.S|re.I)
     if matchObj:
         print('File name:', matchObj.group(1))
         PageCon['File name'] = matchObj.group(1)
@@ -53,6 +55,17 @@ def TiQuInfo():
         print('File name no match')
         PageCon['File name'] ='File name no match'
 
+
+    #TO DO Search DUT
+    matchObj = re.search(r'DUT: (.*?); Type: (.*?); Serial: (.*?)\s', pageCont, re.M|re.I)
+    if matchObj:
+        PageCon['DUT'] = matchObj.group(1)
+        PageCon['Type'] = matchObj.group(2)
+        PageCon['Serial'] = matchObj.group(3)
+    else:
+        PageCon['DUT'] = 'DUT name no match'
+        PageCon['Type'] = 'DUT name no match'
+        PageCon['Serial'] = 'DUT name no match'
 
     #TO DO Search Medium fre:
     matchObj = re.search(r'f = (.*?) MHz;', pageCont, re.M|re.I)
@@ -92,19 +105,20 @@ def TiQuInfo():
 
 
     #TO DO Search Probe
-    matchObj = re.search(r'(EX3DV4|ES3DV3).*?SN([0-9]{4}).*?Calibrated.*?([0-9].*?);', pageCont, re.M|re.I)
+    matchObj = re.search(r'(EX3DV4|ES3DV3).*?SN([0-9]{4}).*?Calibrated: ([0-9].*?);',pageCont, re.M|re.S|re.I)
     if matchObj:
         print('Probe type:', matchObj.group(1))
         print('Probe SN:', matchObj.group(2))
         print('Probe Calibrate DATE:', matchObj.group(3))
         PageCon['Probe type'] = matchObj.group(1)
         PageCon['Probe SN'] = matchObj.group(2)
-        PageCon['Probe Calibrate DATE'] = matchObj.group(2)
+        PageCon['Probe Calibrate DATE'] = matchObj.group(3)
 
-        if  matchObj.group(2) not in EquipmentList:
+        if  matchObj.group(2) not in EquipmentListConPROBE:
+            EquipmentListConPROBE.append(matchObj.group(2))
             EquipmentListCon = {'Manufacturer': 'SPEAG', 'Device': 'Dosimetric E-Field Probe', 'Type': PageCon['Probe type'], 'SN': PageCon['Probe SN'],
                                 'DateOfCal': PageCon['Probe Calibrate DATE'], 'Vaild period': 'One year'}
-            EquipmentList.append(EquipmentListCon)
+            EquipmentList.append(list(EquipmentListCon.values()))
 
     else:
         print('Porbe no match')
@@ -130,10 +144,12 @@ def TiQuInfo():
         print('DAE Calibrate DATE:', matchObj.group(2))
         PageCon['DAE SN'] = matchObj.group(1)
         PageCon['DAE Calibrate DATE'] = matchObj.group(2)
-        if  matchObj.group(2) not in EquipmentList:
+        if  matchObj.group(2) not in EquipmentListConDAE:
+            EquipmentListConDAE.append(matchObj.group(2))
+
             EquipmentListCon = {'Manufacturer': 'SPEAG', 'Device': 'Data acquisition electronics', 'Type': 'DAE4', 'SN': PageCon['DAE SN'],
                                 'DateOfCal': PageCon['DAE Calibrate DATE'], 'Vaild period': 'One year'}
-            EquipmentList.append(EquipmentListCon)
+            EquipmentList.append(list(EquipmentListCon.values()))
     else:
         print('DAE no match')
         PageCon['DAE SN'] = 'DAE no match'
@@ -149,10 +165,11 @@ def TiQuInfo():
         PageCon['Phantom'] = matchObj.group(1)
         PageCon['Phantom Type'] = matchObj.group(2)
         PageCon['Phantom Serial'] = matchObj.group(3)
-        if  matchObj.group(3) not in EquipmentList:
+        if  matchObj.group(3) not in EquipmentListConPHANTOM:
+            EquipmentListConPHANTOM.append(matchObj.group(3))
             EquipmentListCon = {'Manufacturer': 'SPEAG', 'Device': 'Twin Phantom ', 'Type': PageCon['Phantom Type'], 'SN': PageCon['Phantom Serial'],
                                 'DateOfCal': 'NCR', 'Vaild period': 'NCR'}
-            EquipmentList.append(EquipmentListCon)
+            EquipmentList.append(list(EquipmentListCon.values()))
     else:
         print('Phantom no match')
         PageCon['Phantom'] = 'Phantom no match'
@@ -220,23 +237,19 @@ def prtexcel():
     wb = Workbook()
     ws = wb['Sheet']
 
-    b =0
-    #
-    # for a  in  PageConList:
-    #     # ws['A' + str(b)]  = list(PageConList[0].values())
-    #     print(list(PageConList[0].values()))
-    #     b = b + 1
-
-    # print(list(PageConList[0].values()))
-
     for b in range(0 ,len(PageConList)):
         ws.append(PageConList[b])
+
+    ws1 = wb.create_sheet()
+
+    for b in range(0 ,len(EquipmentList)):
+        ws1.append(EquipmentList[b])
 
     wb.save(r'C:\Users\Sun Shanbin\Desktop\PDF\TEST.xlsx')
 
 
+# for Page in range(0,pdfReader.numPages):
 for Page in range(0,pdfReader.numPages):
-
-    TiQuInfo()
+    TiQuInfo(Page)
 
 prtexcel()
